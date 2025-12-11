@@ -1,0 +1,93 @@
+{
+  "common": {
+    "home": "Home",
+    "moments": "Moments",
+    "photos": "Photos",
+    "links": "Links",
+    "archives": "Archives",
+    "search": "Search",
+    "loading": "Loading...",
+    "empty": "No content",
+    "more": "More",
+    "back": "Back",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "save": "Save",
+    "language": "Switch Language",
+    "theme": "Switch Theme"
+  },
+  "home": {
+    "title": "Latest Posts",
+    "hero": {
+      "title": "Hi, Friend",
+      "subtitle": "Welcome to my blog"
+    }
+  },
+  "post": {
+    "title": "Post",
+    "views": "Views",
+    "likes": "Likes",
+    "readTime": "Read Time",
+    "wordCount": "Words",
+    "publishedAt": "Published",
+    "updatedAt": "Updated",
+    "related": "Related Posts",
+    "tags": "Tags",
+    "category": "Category"
+  },
+  "comment": {
+    "title": "Comments",
+    "placeholder": "Write your comment...",
+    "submit": "Submit Comment",
+    "login": "Please {link} to comment",
+    "loginLink": "login",
+    "reply": "Reply",
+    "like": "Like",
+    "empty": "No comments",
+    "justNow": "Just now",
+    "minutesAgo": "{count} minutes ago",
+    "hoursAgo": "{count} hours ago",
+    "daysAgo": "{count} days ago"
+  },
+  "moment": {
+    "title": "Moments",
+    "placeholder": "Share your thoughts...",
+    "submit": "Post",
+    "like": "Like",
+    "comment": "Comment",
+    "empty": "No moments",
+    "justNow": "Just now",
+    "minutesAgo": "{count} minutes ago",
+    "hoursAgo": "{count} hours ago",
+    "daysAgo": "{count} days ago"
+  },
+  "album": {
+    "title": "Albums",
+    "photos": "photos",
+    "empty": "No albums"
+  },
+  "links": {
+    "title": "Friends Links",
+    "empty": "No links"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Enter keywords to search...",
+    "searching": "Searching...",
+    "noResults": "No results found",
+    "results": "Search Results"
+  },
+  "archives": {
+    "title": "Archives"
+  },
+  "category": {
+    "empty": "No posts in this category"
+  },
+  "tag": {
+    "empty": "No posts with this tag"
+  }
+}
+

@@ -1,0 +1,93 @@
+{
+  "common": {
+    "home": "首页",
+    "moments": "瞬间",
+    "photos": "相册",
+    "links": "友链",
+    "archives": "归档",
+    "search": "搜索",
+    "loading": "加载中...",
+    "empty": "暂无内容",
+    "more": "更多",
+    "back": "返回",
+    "submit": "提交",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "save": "保存",
+    "language": "切换语言",
+    "theme": "切换主题"
+  },
+  "home": {
+    "title": "最新文章",
+    "hero": {
+      "title": "Hi, Friend",
+      "subtitle": "欢迎来到我的博客"
+    }
+  },
+  "post": {
+    "title": "文章",
+    "views": "浏览",
+    "likes": "点赞",
+    "readTime": "阅读时间",
+    "wordCount": "字数",
+    "publishedAt": "发布于",
+    "updatedAt": "更新于",
+    "related": "相关文章",
+    "tags": "标签",
+    "category": "分类"
+  },
+  "comment": {
+    "title": "评论",
+    "placeholder": "写下你的评论...",
+    "submit": "发表评论",
+    "login": "请 {link} 后发表评论",
+    "loginLink": "登录",
+    "reply": "回复",
+    "like": "点赞",
+    "empty": "暂无评论",
+    "justNow": "刚刚",
+    "minutesAgo": "{count}分钟前",
+    "hoursAgo": "{count}小时前",
+    "daysAgo": "{count}天前"
+  },
+  "moment": {
+    "title": "瞬间",
+    "placeholder": "分享你的想法...",
+    "submit": "发布",
+    "like": "点赞",
+    "comment": "评论",
+    "empty": "暂无瞬间",
+    "justNow": "刚刚",
+    "minutesAgo": "{count}分钟前",
+    "hoursAgo": "{count}小时前",
+    "daysAgo": "{count}天前"
+  },
+  "album": {
+    "title": "相册",
+    "photos": "张照片",
+    "empty": "暂无相册"
+  },
+  "links": {
+    "title": "友情链接",
+    "empty": "暂无友链"
+  },
+  "search": {
+    "title": "搜索",
+    "placeholder": "输入关键词搜索...",
+    "searching": "搜索中...",
+    "noResults": "未找到相关文章",
+    "results": "搜索结果"
+  },
+  "archives": {
+    "title": "归档"
+  },
+  "category": {
+    "empty": "该分类下暂无文章"
+  },
+  "tag": {
+    "empty": "该标签下暂无文章"
+  }
+}
+
