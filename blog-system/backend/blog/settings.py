@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'moments',
     'photos',
     'links',
+    'settings',
 ]
 
 MIDDLEWARE = [
@@ -176,6 +177,11 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Session 配置（用于加密内容访问验证）
+SESSION_COOKIE_AGE = 1800  # 30分钟（秒）
+SESSION_SAVE_EVERY_REQUEST = True  # 每次请求都保存session，延长过期时间
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # 关闭浏览器不立即过期
 
 # 自定义用户模型
 AUTH_USER_MODEL = 'users.User'

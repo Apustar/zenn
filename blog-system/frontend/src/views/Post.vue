@@ -32,7 +32,19 @@
       <div v-if="post.cover" class="post-cover">
         <LazyImage :src="post.cover" :alt="post.title" />
       </div>
-      <div class="post-content" v-html="post.content_html"></div>
+      <!-- 加密文章预览 -->
+      <div v-if="post.is_encrypted && !post.is_password_verified" class="post-content">
+        <div v-if="post.preview_content_html" v-html="post.preview_content_html"></div>
+        <div class="encrypted-notice">
+          <Icon icon="mdi:lock" />
+          <p>此文章已加密，请输入密码查看全文</p>
+          <button class="btn-view-full" @click="showPasswordModal = true">
+            查看全文
+          </button>
+        </div>
+      </div>
+      <!-- 完整内容 -->
+      <div v-else class="post-content" v-html="post.content_html"></div>
       <footer class="post-footer">
         <div class="post-tags">
           <Icon icon="mdi:tag" />
@@ -51,9 +63,18 @@
     
     <!-- 评论区域 -->
     <CommentList
-      v-if="post"
+      v-if="post && (!post.is_encrypted || post.is_password_verified)"
       content-type="posts.post"
       :object-id="post.id"
+    />
+    
+    <!-- 密码输入弹窗 -->
+    <PasswordModal
+      ref="passwordModalRef"
+      v-model:visible="showPasswordModal"
+      title="文章已加密"
+      message="此文章已加密，请输入密码查看全文"
+      @submit="handlePasswordSubmit"
     />
   </div>
 </template>
@@ -64,6 +85,7 @@ import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import LazyImage from '@/components/LazyImage.vue'
 import CommentList from '@/components/CommentList.vue'
+import PasswordModal from '@/components/PasswordModal.vue'
 import { initHighlight } from '@/utils/highlight'
 import { postsApi, type Post } from '@/api/posts'
 
@@ -71,6 +93,8 @@ const route = useRoute()
 const post = ref<Post | null>(null)
 const loading = ref(false)
 const isLiked = ref(false)
+const showPasswordModal = ref(false)
+const passwordModalRef = ref<InstanceType<typeof PasswordModal> | null>(null)
 
 const fetchPost = async () => {
   loading.value = true
@@ -119,6 +143,24 @@ const formatDate = (dateString: string) => {
     month: 'long',
     day: 'numeric',
   })
+}
+
+const handlePasswordSubmit = async (password: string) => {
+  if (!post.value) return
+  
+  try {
+    await postsApi.verifyPassword(post.value.slug, password)
+    // 密码验证成功，重新获取文章
+    await fetchPost()
+    showPasswordModal.value = false
+  } catch (error: any) {
+    if (import.meta.env.DEV) {
+      console.error('Password verification failed:', error)
+    }
+    // 显示错误信息
+    const errorMsg = error.response?.data?.error || '密码错误，请重试'
+    passwordModalRef.value?.setError(errorMsg)
+  }
 }
 
 onMounted(() => {
@@ -251,6 +293,42 @@ onMounted(() => {
   text-align: center;
   padding: 60px 0;
   color: var(--text-secondary, #666);
+}
+
+.encrypted-notice {
+  margin-top: 40px;
+  padding: 40px;
+  text-align: center;
+  background: var(--bg-color, #f5f5f5);
+  border-radius: 8px;
+  border: 2px dashed var(--border-color, #e5e5e5);
+}
+
+.encrypted-notice :deep(svg) {
+  font-size: 48px;
+  color: var(--text-secondary, #999);
+  margin-bottom: 16px;
+}
+
+.encrypted-notice p {
+  margin: 0 0 20px 0;
+  color: var(--text-secondary, #666);
+  font-size: 16px;
+}
+
+.btn-view-full {
+  padding: 12px 24px;
+  background: var(--primary-color, #FE9600);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-view-full:hover {
+  opacity: 0.9;
 }
 </style>
 

@@ -30,6 +30,9 @@ export interface Post {
   is_liked?: boolean
   word_count?: number
   read_time?: number
+  is_encrypted?: boolean
+  is_password_verified?: boolean
+  preview_content_html?: string | null
   published_at?: string
   created_at: string
   updated_at?: string
@@ -87,6 +90,11 @@ export const postsApi = {
   // 获取归档
   getArchives: async (): Promise<Record<string, Post[]>> => {
     return api.get<Record<string, Post[]>>('/posts/archives/')
+  },
+
+  // 验证文章密码
+  verifyPassword: async (slug: string, password: string): Promise<{ success: boolean; message: string }> => {
+    return api.post(`/posts/${slug}/verify_password/`, { password })
   },
 }
 

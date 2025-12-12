@@ -33,7 +33,7 @@
 ### 技术栈
 
 #### 后端
-- Django 4.x
+- Django 5.x
 - Django REST Framework
 - JWT 认证
 - SQLite/PostgreSQL

@@ -10,12 +10,18 @@
         <div v-else class="album-placeholder">
           <Icon icon="mdi:image-multiple" />
         </div>
+        <div v-if="album.is_encrypted" class="encrypted-badge">
+          <Icon icon="mdi:lock" />
+        </div>
         <div class="album-overlay">
           <span class="photo-count">{{ album.photos_count }} 张</span>
         </div>
       </div>
       <div class="album-content">
-        <h3 class="album-title">{{ album.name }}</h3>
+        <h3 class="album-title">
+          {{ album.name }}
+          <Icon v-if="album.is_encrypted" icon="mdi:lock" class="title-lock-icon" />
+        </h3>
         <p v-if="album.description" class="album-description">{{ album.description }}</p>
       </div>
     </router-link>
@@ -101,6 +107,24 @@ defineProps<{
   font-size: 14px;
 }
 
+.encrypted-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.encrypted-badge :deep(svg) {
+  font-size: 20px;
+}
+
 .album-content {
   padding: 20px;
 }
@@ -110,6 +134,14 @@ defineProps<{
   font-weight: bold;
   margin-bottom: 8px;
   color: var(--text-color, #333);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-lock-icon {
+  font-size: 18px;
+  color: var(--text-secondary, #666);
 }
 
 .album-description {

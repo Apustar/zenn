@@ -22,6 +22,8 @@ export interface Album {
   }
   photos: Photo[]
   photos_count: number
+  is_encrypted?: boolean
+  is_password_verified?: boolean
   order: number
   created_at: string
   updated_at: string
@@ -54,6 +56,11 @@ export const photosApi = {
     order?: number
   }) => {
     return api.post<Album>('/albums/', data)
+  },
+
+  // 验证相册密码
+  verifyPassword: async (slug: string, password: string): Promise<{ success: boolean; message: string }> => {
+    return api.post(`/albums/${slug}/verify_password/`, { password })
   },
 }
 

@@ -4,14 +4,26 @@
       <div v-if="loading" class="loading">加载中...</div>
       <div v-else-if="album">
         <header class="album-header">
-          <h1 class="album-title">{{ album.name }}</h1>
+          <h1 class="album-title">
+            {{ album.name }}
+            <Icon v-if="album.is_encrypted" icon="mdi:lock" class="lock-icon" />
+          </h1>
           <p v-if="album.description" class="album-description">{{ album.description }}</p>
           <div class="album-meta">
             <span>{{ album.photos_count }} 张照片</span>
           </div>
         </header>
 
-        <div v-if="album.photos && album.photos.length > 0" class="photos-masonry">
+        <!-- 加密相册未验证提示 -->
+        <div v-if="album.is_encrypted && !album.is_password_verified" class="encrypted-album-notice">
+          <Icon icon="mdi:lock" />
+          <p>此相册已加密，请输入密码查看照片</p>
+          <button class="btn-unlock" @click="showPasswordModal = true">
+            输入密码
+          </button>
+        </div>
+
+        <div v-else-if="album.photos && album.photos.length > 0" class="photos-masonry">
           <div
             v-for="photo in album.photos"
             :key="photo.id"
@@ -38,6 +50,15 @@
         <Icon icon="mdi:close" />
       </button>
     </div>
+    
+    <!-- 密码输入弹窗 -->
+    <PasswordModal
+      ref="passwordModalRef"
+      v-model:visible="showPasswordModal"
+      title="相册已加密"
+      message="此相册已加密，请输入密码查看照片"
+      @submit="handlePasswordSubmit"
+    />
   </div>
 </template>
 
@@ -46,12 +67,15 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import LazyImage from '@/components/LazyImage.vue'
+import PasswordModal from '@/components/PasswordModal.vue'
 import { photosApi, type Album, type Photo } from '@/api/photos'
 
 const route = useRoute()
 const album = ref<Album | null>(null)
 const loading = ref(false)
 const selectedPhoto = ref<Photo | null>(null)
+const showPasswordModal = ref(false)
+const passwordModalRef = ref<InstanceType<typeof PasswordModal> | null>(null)
 
 const fetchAlbum = async () => {
   loading.value = true
@@ -76,6 +100,24 @@ const openLightbox = (photo: Photo) => {
 const closeLightbox = () => {
   selectedPhoto.value = null
   document.body.style.overflow = ''
+}
+
+const handlePasswordSubmit = async (password: string) => {
+  if (!album.value) return
+  
+  try {
+    await photosApi.verifyPassword(album.value.slug, password)
+    // 密码验证成功，重新获取相册
+    await fetchAlbum()
+    showPasswordModal.value = false
+  } catch (error: any) {
+    if (import.meta.env.DEV) {
+      console.error('Password verification failed:', error)
+    }
+    // 显示错误信息
+    const errorMsg = error.response?.data?.error || '密码错误，请重试'
+    passwordModalRef.value?.setError(errorMsg)
+  }
 }
 
 onMounted(() => {
@@ -104,6 +146,15 @@ onMounted(() => {
   font-weight: bold;
   margin-bottom: 16px;
   color: var(--text-color, #333);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.lock-icon {
+  font-size: 28px;
+  color: var(--text-secondary, #666);
 }
 
 .album-description {
@@ -222,6 +273,42 @@ onMounted(() => {
   text-align: center;
   padding: 60px 0;
   color: var(--text-secondary, #666);
+}
+
+.encrypted-album-notice {
+  text-align: center;
+  padding: 60px 40px;
+  background: var(--bg-color, #f5f5f5);
+  border-radius: 8px;
+  border: 2px dashed var(--border-color, #e5e5e5);
+  margin-bottom: 40px;
+}
+
+.encrypted-album-notice :deep(svg) {
+  font-size: 64px;
+  color: var(--text-secondary, #999);
+  margin-bottom: 20px;
+}
+
+.encrypted-album-notice p {
+  margin: 0 0 24px 0;
+  color: var(--text-secondary, #666);
+  font-size: 18px;
+}
+
+.btn-unlock {
+  padding: 12px 32px;
+  background: var(--primary-color, #FE9600);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-unlock:hover {
+  opacity: 0.9;
 }
 </style>
 

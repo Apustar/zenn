@@ -6,6 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Post, PostLike, PostView
 from .serializers import PostListSerializer, PostDetailSerializer, PostCreateUpdateSerializer
+from .utils import verify_content_password, mark_password_verified_in_session, check_password_verified_in_session
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -32,7 +33,7 @@ class PostViewSet(viewsets.ModelViewSet):
         # 记录浏览（避免短时间内重复记录）
         self._record_view(instance, request)
         
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={'request': request})
         return Response(serializer.data)
 
     def _record_view(self, post, request):
@@ -104,7 +105,7 @@ class PostViewSet(viewsets.ModelViewSet):
             Q(category=post.category) | Q(tags__in=post.tags.all()),
             status='published'
         ).exclude(id=post.id).distinct()[:5]
-        serializer = PostListSerializer(related_posts, many=True)
+        serializer = PostListSerializer(related_posts, many=True, context={'request': request})
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
@@ -118,5 +119,25 @@ class PostViewSet(viewsets.ModelViewSet):
             key = f"{year}-{month:02d}"
             if key not in archives:
                 archives[key] = []
-            archives[key].append(PostListSerializer(post).data)
+            archives[key].append(PostListSerializer(post, context={'request': request}).data)
         return Response(archives)
+    
+    @action(detail=True, methods=['post'])
+    def verify_password(self, request, slug=None):
+        """验证文章密码"""
+        post = self.get_object()
+        
+        if not post.is_encrypted:
+            return Response({'error': '该文章未加密'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        password = request.data.get('password')
+        if not password:
+            return Response({'error': '请输入密码'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 验证密码
+        if verify_content_password(post.password, password):
+            # 标记为已验证（使用密码更新时间）
+            mark_password_verified_in_session(request, 'post', post.id, post.password_updated_at)
+            return Response({'success': True, 'message': '密码验证成功'})
+        else:
+            return Response({'error': '密码错误'}, status=status.HTTP_400_BAD_REQUEST)

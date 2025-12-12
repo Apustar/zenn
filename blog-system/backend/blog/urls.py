@@ -29,6 +29,7 @@ urlpatterns = [
     path('', include('moments.urls')),
     path('', include('photos.urls')),
     path('', include('links.urls')),
+    path('', include('settings.urls')),
 ]
 
 # 开发环境下的媒体文件服务

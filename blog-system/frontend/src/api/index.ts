@@ -4,6 +4,7 @@ import type { AxiosInstance, AxiosResponse } from 'axios'
 const api = axios.create({
   baseURL: '/api',
   timeout: 10000,
+  withCredentials: true, // 允许发送cookies（用于session）
   headers: {
     'Content-Type': 'application/json',
   },
