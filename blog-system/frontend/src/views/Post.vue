@@ -27,6 +27,12 @@
             <Icon :icon="isLiked ? 'mdi:heart' : 'mdi:heart-outline'" />
             {{ post.likes }}
           </button>
+          <ShareButton
+            :url="shareUrl"
+            :title="post.title"
+            :description="post.excerpt"
+            :show-social-share="true"
+          />
         </div>
       </header>
       <div v-if="post.cover" class="post-cover">
@@ -86,8 +92,10 @@ import { Icon } from '@iconify/vue'
 import LazyImage from '@/components/LazyImage.vue'
 import CommentList from '@/components/CommentList.vue'
 import PasswordModal from '@/components/PasswordModal.vue'
+import ShareButton from '@/components/ShareButton.vue'
 import { initHighlight } from '@/utils/highlight'
 import { postsApi, type Post } from '@/api/posts'
+import { getCurrentUrl } from '@/utils/clipboard'
 
 const route = useRoute()
 const post = ref<Post | null>(null)
@@ -95,6 +103,7 @@ const loading = ref(false)
 const isLiked = ref(false)
 const showPasswordModal = ref(false)
 const passwordModalRef = ref<InstanceType<typeof PasswordModal> | null>(null)
+const shareUrl = ref('')
 
 const fetchPost = async () => {
   loading.value = true
@@ -102,6 +111,8 @@ const fetchPost = async () => {
     post.value = await postsApi.getPost(route.params.slug as string)
     if (post.value) {
       isLiked.value = (post.value as any).is_liked || false
+      // 生成分享链接
+      shareUrl.value = getCurrentUrl()
       // 更新 SEO（延迟执行）
       import('@/utils/seo').then(({ updatePostSEO }) => {
         updatePostSEO(post.value!)
@@ -206,6 +217,11 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.meta-item :deep(.share-button-wrapper) {
+  display: flex;
+  align-items: center;
 }
 
 .like-btn {

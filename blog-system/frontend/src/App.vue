@@ -10,6 +10,7 @@
     </main>
     <Footer />
     <BackToTop />
+    <MusicPlayer />
   </div>
 </template>
 
@@ -18,6 +19,7 @@ import { onMounted } from 'vue'
 import Header from './components/Header.vue'
 import Footer from './components/Footer.vue'
 import BackToTop from './components/BackToTop.vue'
+import MusicPlayer from './components/MusicPlayer.vue'
 
 onMounted(() => {
   // 初始化 SEO（延迟执行，避免影响页面渲染）
@@ -38,6 +40,7 @@ onMounted(() => {
 
 .main-content {
   flex: 1;
+  padding-bottom: 80px; /* 为音乐播放器展开时预留空间 */
 }
 
 .fade-enter-active,

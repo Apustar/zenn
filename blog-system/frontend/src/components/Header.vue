@@ -106,33 +106,18 @@ const fetchNavigationItems = async () => {
   try {
     const items = await navigationApi.getNavigationItems()
     
-    if (import.meta.env.DEV) {
-      console.log('Fetched navigation items:', items)
-    }
-    
     // 过滤掉不可见的菜单项（双重保险）
     const visibleItems = Array.isArray(items) 
       ? items.filter(item => {
           // 严格检查 is_visible 字段
-          const isVisible = item.is_visible === true || item.is_visible === undefined
-          if (import.meta.env.DEV && !isVisible) {
-            console.log('Filtered out menu item:', item.name, 'is_visible:', item.is_visible)
-          }
-          return isVisible
+          return item.is_visible === true || item.is_visible === undefined
         })
       : []
-    
-    if (import.meta.env.DEV) {
-      console.log('Visible navigation items:', visibleItems)
-    }
     
     // 如果返回的数组为空或没有数据，使用默认菜单
     if (visibleItems.length > 0) {
       navigationItems.value = visibleItems
     } else {
-      if (import.meta.env.DEV) {
-        console.log('No visible items, using default menu')
-      }
       navigationItems.value = defaultNavigationItems
     }
   } catch (error) {

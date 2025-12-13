@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'photos',
     'links',
     'settings',
+    'music',
 ]
 
 MIDDLEWARE = [
