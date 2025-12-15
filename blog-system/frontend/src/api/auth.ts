@@ -20,6 +20,8 @@ export interface User {
   avatar?: string
   bio?: string
   website?: string
+  is_staff?: boolean
+  is_superuser?: boolean
   date_joined: string
 }
 

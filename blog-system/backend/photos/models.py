@@ -29,10 +29,16 @@ class Album(models.Model):
     
     def save(self, *args, **kwargs):
         # 处理加密密码
+        self._handle_password()
+        
+        super().save(*args, **kwargs)
+    
+    def _handle_password(self):
+        """处理相册密码加密和更新时间"""
         password_changed = False
+        old_password = None
         
         # 获取旧的密码（如果存在）
-        old_password = None
         if self.pk:
             try:
                 old_instance = Album.objects.get(pk=self.pk)
@@ -62,8 +68,6 @@ class Album(models.Model):
         if password_changed:
             from django.utils import timezone
             self.password_updated_at = timezone.now()
-        
-        super().save(*args, **kwargs)
 
 
 class Photo(models.Model):

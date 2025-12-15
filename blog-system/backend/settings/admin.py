@@ -4,7 +4,7 @@ from .models import SiteSettings, NavigationItem
 
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
-    list_display = ['site_name', 'site_description', 'updated_at']
+    list_display = ['site_name', 'enable_email_notification', 'updated_at']
     fieldsets = (
         ('基本信息', {
             'fields': ('site_name', 'site_description', 'site_keywords')
@@ -16,6 +16,15 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ('关于页面', {
             'fields': ('about_content',),
             'description': '关于页面的内容，支持 Markdown 格式'
+        }),
+        ('邮件通知配置', {
+            'fields': (
+                'enable_email_notification',
+                'email_host', 'email_port', 'email_use_tls', 'email_use_ssl',
+                'email_host_user', 'email_host_password', 'email_from'
+            ),
+            'description': '配置邮件服务器以启用评论通知功能。常用配置：Gmail (smtp.gmail.com:587, TLS)，QQ邮箱 (smtp.qq.com:587, TLS)',
+            'classes': ('collapse',)
         }),
     )
 

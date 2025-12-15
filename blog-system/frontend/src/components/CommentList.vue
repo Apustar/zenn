@@ -35,9 +35,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { commentsApi, type Comment } from '@/api/comments'
+import { Icon } from '@iconify/vue'
 import { useAuthStore } from '@/stores/auth'
+import { commentsApi, type Comment } from '@/api/comments'
 import CommentItem from './CommentItem.vue'
+import { InputValidator } from '@/utils/security'
 
 const props = defineProps<{
   contentType: string

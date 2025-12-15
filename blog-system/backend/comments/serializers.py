@@ -15,12 +15,14 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = [
             'id', 'author', 'content', 'parent', 'replies', 'likes_count',
-            'is_liked', 'created_at', 'updated_at'
+            'is_liked', 'is_approved', 'content_type', 'object_id',
+            'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def get_replies(self, obj):
-        replies = obj.get_replies()
+        # 优化：避免N+1查询，使用prefetch_related
+        replies = obj.replies.filter(is_approved=True).select_related('author')
         serializer = CommentSerializer(replies, many=True, context=self.context)
         return serializer.data
 

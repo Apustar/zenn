@@ -4,7 +4,8 @@ from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 import markdown
 import bleach
-from .utils import hash_content_password
+from .utils import hash_content_password, extract_toc_from_markdown, add_ids_to_html_headings
+from common.security import sanitize_html
 
 User = get_user_model()
 
@@ -56,6 +57,17 @@ class Post(models.Model):
         indexes = [
             models.Index(fields=['-published_at', '-created_at']),
             models.Index(fields=['status']),
+            models.Index(fields=['author']),
+            models.Index(fields=['is_encrypted']),
+            models.Index(fields=['password_updated_at']),
+            models.Index(fields=['slug']),
+            models.Index(fields=['category']),
+            models.Index(fields=['views']),
+            models.Index(fields=['likes']),
+            models.Index(fields=['is_top']),
+            models.Index(fields=['-published_at', 'status']),
+            models.Index(fields=['-published_at', 'category']),
+            models.Index(fields=['author', 'status']),
         ]
 
     def __str__(self):
@@ -66,10 +78,24 @@ class Post(models.Model):
             self.slug = slugify(self.title)
         
         # 处理加密密码
+        self._handle_password()
+        
+        # 处理内容转换
+        self._process_content()
+        
+        # 设置发布时间
+        if self.status == 'published' and not self.published_at:
+            from django.utils import timezone
+            self.published_at = timezone.now()
+            
+        super().save(*args, **kwargs)
+    
+    def _handle_password(self):
+        """处理文章密码加密和更新时间"""
         password_changed = False
+        old_password = None
         
         # 获取旧的密码（如果存在）
-        old_password = None
         if self.pk:
             try:
                 old_instance = Post.objects.get(pk=self.pk)
@@ -99,23 +125,36 @@ class Post(models.Model):
         if password_changed:
             from django.utils import timezone
             self.password_updated_at = timezone.now()
-        # 将 Markdown 转换为 HTML
-        if self.content:
-            html = markdown.markdown(
-                self.content,
-                extensions=['codehilite', 'fenced_code', 'tables', 'toc']
-            )
-            # 清理 HTML，防止 XSS
-            allowed_tags = list(bleach.sanitizer.ALLOWED_TAGS) + ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td']
-            self.content_html = bleach.clean(
-                html,
-                tags=allowed_tags,
-                attributes=bleach.sanitizer.ALLOWED_ATTRIBUTES
-            )
-        if self.status == 'published' and not self.published_at:
-            from django.utils import timezone
-            self.published_at = timezone.now()
-        super().save(*args, **kwargs)
+    
+    def _process_content(self):
+        """处理Markdown内容转换为HTML"""
+        if not self.content:
+            self.content_html = ''
+            return
+            
+        html = markdown.markdown(
+            self.content,
+            extensions=['codehilite', 'fenced_code', 'tables', 'toc']
+        )
+        # 为标题添加 ID 属性（用于 TOC 锚点）
+        html = add_ids_to_html_headings(html)
+        # 使用安全工具清理 HTML，防止 XSS
+        # 允许标题标签保留 id 属性
+        allowed_attributes = {
+            '*': ['class'],
+            'a': ['href', 'title', 'target'],
+            'img': ['src', 'alt', 'title', 'width', 'height'],
+            'blockquote': ['cite'],
+            'code': ['class'],
+            'pre': ['class'],
+            'h1': ['id', 'class'],
+            'h2': ['id', 'class'],
+            'h3': ['id', 'class'],
+            'h4': ['id', 'class'],
+            'h5': ['id', 'class'],
+            'h6': ['id', 'class'],
+        }
+        self.content_html = sanitize_html(html, allowed_attributes=allowed_attributes)
 
     def get_absolute_url(self):
         return reverse('post-detail', kwargs={'slug': self.slug})
@@ -129,6 +168,12 @@ class Post(models.Model):
         word_count = self.get_word_count()
         # 假设每分钟阅读 200 字
         return max(1, round(word_count / 200))
+    
+    def get_toc(self):
+        """获取文章目录（TOC）"""
+        if not self.content:
+            return []
+        return extract_toc_from_markdown(self.content)
 
 
 class PostLike(models.Model):

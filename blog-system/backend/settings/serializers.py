@@ -11,8 +11,18 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = SiteSettings
-        fields = ['site_name', 'site_description', 'site_keywords', 'site_icon', 'site_icon_url', 'about_content', 'about_content_html', 'updated_at']
+        fields = [
+            'site_name', 'site_description', 'site_keywords', 'site_icon', 'site_icon_url', 
+            'about_content', 'about_content_html',
+            'enable_email_notification', 'email_host', 'email_port', 'email_use_tls', 
+            'email_use_ssl', 'email_host_user', 'email_from',
+            'updated_at'
+        ]
         read_only_fields = ['updated_at']
+        # 邮件密码字段不返回给前端
+        extra_kwargs = {
+            'email_host_password': {'write_only': True},
+        }
     
     def get_site_icon_url(self, obj):
         """获取图标完整URL"""
@@ -42,7 +52,14 @@ class SiteSettingsUpdateSerializer(serializers.ModelSerializer):
     """站点设置更新序列化器"""
     class Meta:
         model = SiteSettings
-        fields = ['site_name', 'site_description', 'site_keywords', 'site_icon', 'about_content']
+        fields = [
+            'site_name', 'site_description', 'site_keywords', 'site_icon', 'about_content',
+            'enable_email_notification', 'email_host', 'email_port', 'email_use_tls', 
+            'email_use_ssl', 'email_host_user', 'email_host_password', 'email_from'
+        ]
+        extra_kwargs = {
+            'email_host_password': {'write_only': True},
+        }
 
 
 class NavigationItemSerializer(serializers.ModelSerializer):

@@ -12,6 +12,9 @@ export interface Comment {
   replies?: Comment[]
   likes_count: number
   is_liked: boolean
+  is_approved?: boolean
+  content_type?: number
+  object_id?: number
   created_at: string
   updated_at: string
 }
@@ -53,6 +56,25 @@ export const commentsApi = {
   // 点赞评论
   likeComment: async (id: number): Promise<void> => {
     return api.post<void>(`/comments/${id}/like/`)
+  },
+
+  // 获取所有评论（管理员）
+  getAllComments: async (params?: {
+    page?: number
+    is_approved?: boolean
+    search?: string
+  }): Promise<CommentListResponse> => {
+    return api.get<CommentListResponse>('/comments/', { params })
+  },
+
+  // 审核评论（管理员）
+  approveComment: async (id: number, approved: boolean): Promise<Comment> => {
+    return api.post<Comment>(`/comments/${id}/approve/`, { approved })
+  },
+
+  // 删除评论
+  deleteComment: async (id: number): Promise<void> => {
+    return api.delete(`/comments/${id}/`)
   },
 }
 

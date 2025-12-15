@@ -17,17 +17,17 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+ 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%h_^aq8kna__g4(e$04rxgojbswb9u@=z8k044+eu8ow0qqpk('
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-%h_^aq8kna__g4(e$04rxgojbswb9u@=z8k044+eu8ow0qqpk(')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
 
 # Application definition
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
+    'common',
     'posts',
     'categories',
     'tags',
@@ -158,6 +159,7 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ),
+    'EXCEPTION_HANDLER': 'common.response.custom_exception_handler',
 }
 
 # JWT 配置
@@ -186,3 +188,48 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # 关闭浏览器不立即过期
 
 # 自定义用户模型
 AUTH_USER_MODEL = 'users.User'
+
+# 前端 URL 配置（用于 RSS Feed 链接）
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+
+# 邮件配置（默认配置，可在站点设置中覆盖）
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() == 'true'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+
+# 安全配置
+if not DEBUG:
+    # 生产环境安全设置
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000  # 1年
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # 如果使用HTTPS，启用以下设置
+    # SECURE_SSL_REDIRECT = True
+    # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # SESSION_COOKIE_SECURE = True
+    # CSRF_COOKIE_SECURE = True
+
+# CSRF设置
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Session安全设置
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# 文件上传限制
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+UPLOAD_FILE_MAX_SIZE = 10485760  # 10MB
+
+# 限制请求体大小
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB

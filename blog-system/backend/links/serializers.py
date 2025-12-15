@@ -23,7 +23,13 @@ class LinkCategorySerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
     def get_links(self, obj):
-        """只返回可见的链接，并按顺序排序"""
-        visible_links = obj.links.filter(is_visible=True).order_by('order', 'name')
-        return LinkSerializer(visible_links, many=True).data
+        """管理员可以看到所有链接，普通用户只能看到可见的链接"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and request.user.is_staff:
+            # 管理员查看所有链接
+            links = obj.links.all().order_by('order', 'name')
+        else:
+            # 普通用户只看到可见的链接
+            links = obj.links.filter(is_visible=True).order_by('order', 'name')
+        return LinkSerializer(links, many=True).data
 

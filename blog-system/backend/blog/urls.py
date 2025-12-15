@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from posts.feeds import PostsFeed, CategoryPostsFeed
+from comments.feeds import CommentsFeed
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,6 +33,10 @@ urlpatterns = [
     path('', include('links.urls')),
     path('', include('settings.urls')),
     path('', include('music.urls')),
+    # RSS Feeds
+    path('feed/', PostsFeed(), name='posts-feed'),
+    path('feed/comments/', CommentsFeed(), name='comments-feed'),
+    path('feed/category/<slug:slug>/', CategoryPostsFeed(), name='category-feed'),
 ]
 
 # 开发环境下的媒体文件服务

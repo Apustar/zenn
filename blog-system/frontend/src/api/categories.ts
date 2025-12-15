@@ -23,5 +23,20 @@ export const categoriesApi = {
   getCategory: async (slug: string): Promise<Category> => {
     return api.get<Category>(`/categories/${slug}/`)
   },
+
+  // 创建分类
+  createCategory: async (data: Partial<Category>): Promise<Category> => {
+    return api.post<Category>('/categories/', data)
+  },
+
+  // 更新分类
+  updateCategory: async (slug: string, data: Partial<Category>): Promise<Category> => {
+    return api.patch<Category>(`/categories/${slug}/`, data)
+  },
+
+  // 删除分类
+  deleteCategory: async (slug: string): Promise<void> => {
+    return api.delete(`/categories/${slug}/`)
+  },
 }
 

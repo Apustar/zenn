@@ -36,6 +36,12 @@ class Comment(models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['content_type', 'object_id']),
+            models.Index(fields=['author']),
+            models.Index(fields=['parent']),
+            models.Index(fields=['is_approved']),
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['content_type', 'object_id', 'is_approved']),
+            models.Index(fields=['author', '-created_at']),
         ]
 
     def __str__(self):

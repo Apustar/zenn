@@ -20,5 +20,20 @@ export const tagsApi = {
   getTag: async (slug: string): Promise<Tag> => {
     return api.get<Tag>(`/tags/${slug}/`)
   },
+
+  // 创建标签
+  createTag: async (data: Partial<Tag>): Promise<Tag> => {
+    return api.post<Tag>('/tags/', data)
+  },
+
+  // 更新标签
+  updateTag: async (slug: string, data: Partial<Tag>): Promise<Tag> => {
+    return api.patch<Tag>(`/tags/${slug}/`, data)
+  },
+
+  // 删除标签
+  deleteTag: async (slug: string): Promise<void> => {
+    return api.delete(`/tags/${slug}/`)
+  },
 }
 

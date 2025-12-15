@@ -1,0 +1,19 @@
+{% extends "common/email/base.html" %}
+
+{% block content %}
+<p>您好 <strong>{{ parent_author }}</strong>，</p>
+<p><strong>{{ reply_author }}</strong> 回复了您在《<a href="{{ content_url }}">{{ content_title }}</a>》下的评论：</p>
+
+<div class="comment-box">
+    <p><strong>您的评论：</strong></p>
+    <p>{{ parent_content }}</p>
+</div>
+
+<div class="comment-box">
+    <p><strong>{{ reply_author }} 的回复：</strong></p>
+    <p>{{ reply_content }}</p>
+</div>
+
+<a href="{{ reply_url }}" class="button">查看完整内容</a>
+{% endblock %}
+

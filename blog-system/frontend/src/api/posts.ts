@@ -24,6 +24,7 @@ export interface Post {
     slug: string
     color: string
   }>
+  status?: 'draft' | 'published' | 'archived'
   is_top: boolean
   views: number
   likes: number
@@ -33,9 +34,17 @@ export interface Post {
   is_encrypted?: boolean
   is_password_verified?: boolean
   preview_content_html?: string | null
+  toc?: TOCItem[]
   published_at?: string
   created_at: string
   updated_at?: string
+}
+
+export interface TOCItem {
+  level: number
+  text: string
+  id: string
+  children: TOCItem[]
 }
 
 export interface PostListResponse {
@@ -49,17 +58,49 @@ export const postsApi = {
   // 获取文章列表
   getPosts: async (params?: {
     page?: number
-    category?: string
-    tags?: string
+    category?: string | number
+    tags?: string | number
     search?: string
+    status?: 'draft' | 'published' | 'archived'
     ordering?: string
   }): Promise<PostListResponse> => {
     return api.get<PostListResponse>('/posts/', { params })
   },
 
-  // 获取文章详情
+  // 获取文章详情（通过 slug）
   getPost: async (slug: string): Promise<Post> => {
     return api.get<Post>(`/posts/${slug}/`)
+  },
+
+  // 获取文章详情（通过 ID，用于管理后台）
+  // 注意：后端使用 slug 作为 lookup_field，所以需要通过列表 API 查找
+  getPostById: async (id: number): Promise<Post> => {
+    // 获取所有文章（包括草稿），找到对应的文章
+    // 注意：需要管理员权限才能看到所有文章
+    let page = 1
+    let found = false
+    let post: Post | undefined
+    
+    while (!found) {
+      const response = await api.get<PostListResponse>(`/posts/`, { params: { page } })
+      post = response.results.find(p => p.id === id)
+      
+      if (post) {
+        found = true
+        break
+      }
+      
+      if (!response.next) {
+        break
+      }
+      page++
+    }
+    
+    if (!post) {
+      throw new Error('文章不存在')
+    }
+    
+    return api.get<Post>(`/posts/${post.slug}/`)
   },
 
   // 创建文章
@@ -95,6 +136,34 @@ export const postsApi = {
   // 验证文章密码
   verifyPassword: async (slug: string, password: string): Promise<{ success: boolean; message: string }> => {
     return api.post(`/posts/${slug}/verify_password/`, { password })
+  },
+
+  // 自动保存文章（更新现有文章）
+  autosavePost: async (slug: string, data: Partial<Post>) => {
+    return api.post<{ id: number; slug: string; title: string; updated_at: string }>(
+      `/posts/${slug}/autosave/`,
+      data
+    )
+  },
+
+  // 自动保存新文章（创建草稿）
+  autosaveCreatePost: async (data: Partial<Post>) => {
+    return api.post<{ id: number; slug: string; title: string; updated_at: string }>(
+      '/posts/autosave_create/',
+      data
+    )
+  },
+
+  // 获取热门文章
+  getHotPosts: async (): Promise<Post[]> => {
+    return api.get<Post[]>('/posts/hot/')
+  },
+
+  // 获取搜索建议
+  getSearchSuggestions: async (keyword: string): Promise<string[]> => {
+    return api.get<string[]>('/posts/search_suggestions/', {
+      params: { q: keyword }
+    })
   },
 }
 

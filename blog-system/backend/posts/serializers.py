@@ -18,7 +18,7 @@ class PostListSerializer(serializers.ModelSerializer):
         model = Post
         fields = [
             'id', 'title', 'slug', 'excerpt', 'cover', 'author', 'category', 'tags',
-            'is_top', 'views', 'likes', 'word_count', 'read_time', 'published_at', 'created_at'
+            'status', 'is_top', 'views', 'likes', 'word_count', 'read_time', 'published_at', 'created_at'
         ]
 
     def get_word_count(self, obj):
@@ -39,6 +39,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
     is_encrypted = serializers.BooleanField(read_only=True)
     is_password_verified = serializers.SerializerMethodField()
     preview_content_html = serializers.SerializerMethodField()
+    toc = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
@@ -46,7 +47,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'excerpt', 'content', 'content_html', 'cover',
             'author', 'category', 'tags', 'status', 'is_top', 'is_original',
             'allow_comment', 'views', 'likes', 'is_liked', 'word_count', 'read_time',
-            'is_encrypted', 'is_password_verified', 'preview_content_html',
+            'is_encrypted', 'is_password_verified', 'preview_content_html', 'toc',
             'published_at', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'views', 'likes', 'created_at', 'updated_at']
@@ -100,6 +101,13 @@ class PostDetailSerializer(serializers.ModelSerializer):
                 preview = preview[:cut_point + (5 if last_p > last_div else 6)]
             return preview
         return None
+    
+    def get_toc(self, obj):
+        """获取文章目录（TOC）"""
+        # 如果是加密文章且未验证，不返回 TOC
+        if obj.is_encrypted and not self.get_is_password_verified(obj):
+            return []
+        return obj.get_toc()
     
     def to_representation(self, instance):
         """重写序列化方法，根据验证状态决定返回的内容"""

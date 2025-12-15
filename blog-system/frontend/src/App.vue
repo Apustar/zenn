@@ -1,6 +1,7 @@
 <template>
   <div id="app" class="app-container">
     <Header />
+    <ReadingProgressBar />
     <main class="main-content">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -20,6 +21,7 @@ import Header from './components/Header.vue'
 import Footer from './components/Footer.vue'
 import BackToTop from './components/BackToTop.vue'
 import MusicPlayer from './components/MusicPlayer.vue'
+import ReadingProgressBar from './components/ReadingProgressBar.vue'
 
 onMounted(() => {
   // 初始化 SEO（延迟执行，避免影响页面渲染）

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi, type User } from '@/api/auth'
+import { safeAsync } from '@/utils/async'
 
 export const useAuthStore = defineStore('auth', () => {
   const getInitialToken = (): string | null => {
@@ -16,17 +17,17 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value && !!user.value)
 
   const login = async (username: string, password: string) => {
-    try {
+    const [result, error] = await safeAsync(async () => {
       await authApi.login({ username, password })
       token.value = localStorage.getItem('access_token')
       await fetchUser()
       return true
-    } catch (error: any) {
-      if (import.meta.env.DEV) {
-        console.error('Login failed:', error)
-      }
+    })
+    
+    if (error) {
       throw error
     }
+    return result
   }
 
   const logout = () => {
@@ -36,16 +37,16 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const fetchUser = async () => {
-    try {
-      if (token.value) {
-        const result = await authApi.getCurrentUser()
-        user.value = result || null
-      }
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Fetch user failed:', error)
-      }
+    if (!token.value) return
+    
+    const [result, error] = await safeAsync(async () => {
+      return await authApi.getCurrentUser()
+    })
+    
+    if (error) {
       logout()
+    } else {
+      user.value = result || null
     }
   }
 

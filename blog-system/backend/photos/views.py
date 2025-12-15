@@ -56,8 +56,13 @@ class AlbumViewSet(viewsets.ModelViewSet):
             return Response({'error': '密码错误'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
+class PhotoViewSet(viewsets.ModelViewSet):
     """照片视图集"""
     queryset = Photo.objects.all().select_related('album')
     serializer_class = PhotoSerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]

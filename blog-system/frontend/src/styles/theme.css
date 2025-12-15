@@ -1,0 +1,205 @@
+/**
+ * 主题系统全局样式
+ * 这些样式会被主题配置动态覆盖
+ */
+
+:root {
+  /* 颜色变量 - 默认值，会被主题覆盖 */
+  --primary-color: #FE9600;
+  --secondary-color: #FFB84D;
+  --text-color: #333333;
+  --text-secondary: #666666;
+  --bg-color: #FFFFFF;
+  --card-bg: #FFFFFF;
+  --border-color: #E5E5E5;
+  --header-bg: rgba(255, 255, 255, 0.9);
+  --footer-bg: #F5F5F5;
+  --success-color: #4CAF50;
+  --warning-color: #FF9800;
+  --error-color: #F44336;
+  --info-color: #2196F3;
+  
+  /* 布局变量 */
+  --container-max-width: 1200px;
+  --card-radius: 8px;
+  --button-radius: 6px;
+  --input-radius: 4px;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  
+  /* 字体变量 */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --heading-font: inherit;
+  --base-size: 16px;
+  --line-height: 1.6;
+  
+  /* 动画变量 */
+  --animation-duration: 0.3s;
+  
+  /* 鼠标样式变量 */
+  --cursor-default: default;
+  --cursor-pointer: pointer;
+  --cursor-text: text;
+  --cursor-follow-color: var(--primary-color);
+  --cursor-follow-size: 8px;
+  
+  /* 背景变量 */
+  --bg-gradient: none;
+  --bg-image: none;
+  --bg-strategy: none;
+}
+
+/* 应用字体 */
+body {
+  font-family: var(--font-family);
+  font-size: var(--base-size);
+  line-height: var(--line-height);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font, var(--font-family));
+}
+
+/* 应用背景 */
+body {
+  background-color: var(--bg-color);
+  background-image: var(--bg-image);
+  background-repeat: var(--bg-strategy);
+  background-size: var(--bg-strategy);
+  background-position: center;
+}
+
+/* 如果设置了渐变背景 */
+body[style*="--bg-gradient"] {
+  background-image: var(--bg-gradient);
+}
+
+/* 鼠标样式 */
+* {
+  cursor: var(--cursor-default);
+}
+
+a, button, [role="button"], input[type="button"], input[type="submit"] {
+  cursor: var(--cursor-pointer);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="url"],
+textarea {
+  cursor: var(--cursor-text);
+}
+
+/* 鼠标跟随效果 */
+.cursor-follow {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width var(--animation-duration), height var(--animation-duration), opacity var(--animation-duration);
+}
+
+.cursor-follow-enabled {
+  cursor: none;
+}
+
+.cursor-follow-enabled a,
+.cursor-follow-enabled button,
+.cursor-follow-enabled [role="button"] {
+  cursor: none;
+}
+
+/* 主题特定样式 */
+.theme-default {
+  /* 默认主题无需特殊样式 */
+}
+
+.theme-dark {
+  /* 深色主题特定样式 */
+}
+
+.theme-minimal {
+  /* 极简主题特定样式 */
+  --card-shadow: none;
+  --hover-shadow: none;
+}
+
+.theme-colorful {
+  /* 彩色主题特定样式 */
+}
+
+/* 动画类 */
+.anim-fade {
+  transition: opacity var(--animation-duration);
+}
+
+.anim-slide {
+  transition: transform var(--animation-duration), opacity var(--animation-duration);
+}
+
+.anim-zoom {
+  transition: transform var(--animation-duration), opacity var(--animation-duration);
+}
+
+/* 卡片hover效果 */
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--hover-shadow);
+}
+
+.card-hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.card-hover-glow:hover {
+  box-shadow: 0 0 20px rgba(var(--primary-color-rgb, 254, 150, 0), 0.3);
+}
+
+/* 按钮hover效果 */
+.button-hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.button-hover-glow:hover {
+  box-shadow: 0 0 15px rgba(var(--primary-color-rgb, 254, 150, 0), 0.4);
+}
+
+/* 玻璃态效果 */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 响应式容器 */
+.container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* 卡片基础样式 */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 24px;
+  transition: all var(--animation-duration);
+}
+
+/* 按钮基础样式 */
+.btn {
+  border-radius: var(--button-radius);
+  transition: all var(--animation-duration);
+}
+
+/* 输入框基础样式 */
+input, textarea, select {
+  border-radius: var(--input-radius);
+  transition: all var(--animation-duration);
+}
+

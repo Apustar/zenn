@@ -1,5 +1,5 @@
 <template>
-  <header class="header">
+  <header class="header" :class="headerClass">
     <div class="header-container">
       <div class="header-brand">
         <router-link to="/" class="brand-link">
@@ -23,7 +23,7 @@
           <span class="brand-text">{{ siteTitle }}</span>
         </router-link>
       </div>
-      <nav class="header-nav">
+      <nav class="header-nav" :class="navClass">
         <router-link
           v-for="item in navigationItems"
           :key="item.id"
@@ -41,28 +41,37 @@
         <button @click="toggleLocale" class="action-btn" :title="safeT('common.language', '切换语言')">
           <Icon icon="mdi:translate" />
         </button>
-        <button @click="toggleTheme" class="action-btn" :title="safeT('common.theme', '切换主题')">
-          <Icon :icon="themeStore.isDark ? 'mdi:weather-sunny' : 'mdi:weather-night'" />
-        </button>
+        <ThemeSwitcher />
       </div>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
-import { useThemeStore } from '@/stores/theme'
 import { useI18nStore } from '@/stores/i18n'
+import { useThemeStore } from '@/stores/theme'
 import { settingsApi } from '@/api/settings'
 import { navigationApi, type NavigationItem } from '@/api/settings'
+import ThemeSwitcher from './ThemeSwitcher.vue'
 
 const { t } = useI18n()
 const router = useRouter()
-const themeStore = useThemeStore()
 const i18nStore = useI18nStore()
+const themeStore = useThemeStore()
+
+const headerClass = computed(() => {
+  const headerStyle = themeStore.currentTheme.layout.headerStyle || 'default'
+  return `header-${headerStyle}`
+})
+
+const navClass = computed(() => {
+  const menuStyle = themeStore.currentTheme.layout.menuStyle || 'horizontal'
+  return `nav-${menuStyle}`
+})
 
 const siteTitle = ref('我的博客')
 const siteIconUrl = ref<string | null>(null)
@@ -154,10 +163,6 @@ const toggleSearch = () => {
   router.push('/search')
 }
 
-const toggleTheme = () => {
-  themeStore.toggleDark()
-}
-
 const toggleLocale = () => {
   i18nStore.toggleLocale()
 }
@@ -222,16 +227,64 @@ const handleNavClick = (item: NavigationItem, event: MouseEvent) => {
   gap: 24px;
 }
 
+/* 菜单样式变体 */
+.nav-horizontal {
+  display: flex;
+  gap: 24px;
+}
+
+.nav-centered {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex: 1;
+}
+
+.nav-minimal {
+  display: flex;
+  gap: 16px;
+}
+
+.nav-minimal .nav-link {
+  font-size: 14px;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 .nav-link {
   text-decoration: none;
   color: var(--text-color, #333);
   font-size: 16px;
   transition: color 0.3s;
+  position: relative;
 }
 
 .nav-link:hover,
 .nav-link.router-link-active {
   color: var(--primary-color, #FE9600);
+}
+
+/* 极简主题菜单样式 */
+.nav-minimal .nav-link {
+  border-bottom: 1px solid transparent;
+  padding-bottom: 4px;
+}
+
+.nav-minimal .nav-link:hover,
+.nav-minimal .nav-link.router-link-active {
+  border-bottom-color: var(--primary-color, #000);
+}
+
+/* 居中菜单样式 */
+.nav-centered .nav-link {
+  padding: 8px 16px;
+  border-radius: var(--button-radius, 6px);
+}
+
+.nav-centered .nav-link:hover,
+.nav-centered .nav-link.router-link-active {
+  background: rgba(var(--primary-color-rgb, 254, 150, 0), 0.1);
 }
 
 .header-actions {

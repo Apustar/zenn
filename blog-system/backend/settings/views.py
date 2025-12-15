@@ -6,6 +6,7 @@ from .serializers import (
     SiteSettingsSerializer, SiteSettingsUpdateSerializer,
     NavigationItemSerializer, NavigationItemCreateUpdateSerializer
 )
+from common.email import send_email_notification
 
 
 class SiteSettingsViewSet(viewsets.ModelViewSet):
@@ -54,6 +55,68 @@ class SiteSettingsViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, pk=None):
         """部分更新站点设置"""
         return self.update(request, pk)
+    
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def test_email(self, request):
+        """测试邮件发送功能"""
+        test_email = request.data.get('email', request.user.email)
+        
+        if not test_email:
+            return Response(
+                {'error': '请提供测试邮箱地址'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        site_settings = SiteSettings.get_settings()
+        subject = f"【{site_settings.site_name}】邮件测试"
+        message = f"""
+您好，
+
+这是一封来自 {site_settings.site_name} 的测试邮件。
+
+如果您收到这封邮件，说明邮件配置正确，邮件通知功能已正常工作。
+
+---
+{site_settings.site_name}
+"""
+        # 使用模板生成 HTML 内容
+        from django.template.loader import render_to_string
+        context = {
+            'site_name': site_settings.site_name,
+        }
+        html_message = render_to_string('common/email/test.html', context)
+        
+        try:
+            success = send_email_notification(
+                subject=subject,
+                message=message.strip(),
+                recipient_list=[test_email],
+                html_message=html_message,
+                notification_type='test',
+                async_send=False,  # 测试邮件同步发送，立即返回结果
+            )
+            
+            if success:
+                return Response({
+                    'success': True,
+                    'message': f'测试邮件已发送到 {test_email}，请查收。'
+                })
+            else:
+                return Response(
+                    {
+                        'success': False,
+                        'message': '邮件发送失败，请检查邮件配置是否正确。'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception as e:
+            return Response(
+                {
+                    'success': False,
+                    'message': f'邮件发送失败：{str(e)}'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class NavigationItemViewSet(viewsets.ModelViewSet):
@@ -86,13 +149,18 @@ class NavigationItemViewSet(viewsets.ModelViewSet):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        """重写 list 方法，确保只返回可见的菜单"""
+        """重写 list 方法，管理员可以查看所有菜单项，普通用户只能看到可见的"""
         # 如果数据库中没有菜单，先初始化
         if not NavigationItem.objects.exists():
             NavigationItem.initialize_builtin_items()
         
-        # 只获取可见的菜单项
-        queryset = NavigationItem.objects.filter(is_visible=True).order_by('order', 'id')
+        # 管理员可以查看所有菜单项（包括隐藏的）
+        if request.user.is_authenticated and request.user.is_staff:
+            queryset = NavigationItem.objects.all().order_by('order', 'id')
+        else:
+            # 普通用户只获取可见的菜单项
+            queryset = NavigationItem.objects.filter(is_visible=True).order_by('order', 'id')
+        
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 

@@ -6,8 +6,12 @@ class UserSerializer(serializers.ModelSerializer):
     """用户序列化器"""
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'avatar', 'bio', 'website', 'date_joined']
-        read_only_fields = ['id', 'date_joined']
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name', 
+            'avatar', 'bio', 'website', 'is_staff', 'is_superuser', 
+            'date_joined'
+        ]
+        read_only_fields = ['id', 'is_staff', 'is_superuser', 'date_joined']
 
 
 class UserPublicSerializer(serializers.ModelSerializer):

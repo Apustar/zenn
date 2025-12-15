@@ -1,0 +1,14 @@
+{% extends "common/email/base.html" %}
+
+{% block content %}
+<p>您好 <strong>{{ author }}</strong>，</p>
+<p>您在《<a href="{{ content_url }}">{{ content_title }}</a>》下的评论<span class="status status-{{ status_class }}">{{ status_text }}</span>。</p>
+
+<div class="comment-box">
+    <p><strong>您的评论：</strong></p>
+    <p>{{ comment_content }}</p>
+</div>
+
+<a href="{{ content_url }}" class="button">查看文章</a>
+{% endblock %}
+

@@ -168,6 +168,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { Icon } from '@iconify/vue'
 import { useMusicStore } from '../stores/music'
+import { debounce } from '../utils/async'
 
 const musicStore = useMusicStore()
 
@@ -361,6 +362,18 @@ const handleError = (e: Event) => {
   }
 }
 
+// 使用防抖优化进度条和音量控制
+const debouncedSetCurrentTime = debounce((time: number) => {
+  if (audioRef.value) {
+    audioRef.value.currentTime = time
+    musicStore.setCurrentTime(time)
+  }
+}, 100)
+
+const debouncedSetVolume = debounce((vol: number) => {
+  musicStore.setVolume(vol)
+}, 100)
+
 // 进度条点击
 const handleProgressClick = (e: MouseEvent) => {
   if (!audioRef.value || duration.value === 0) return
@@ -368,16 +381,15 @@ const handleProgressClick = (e: MouseEvent) => {
   const rect = progressBar.getBoundingClientRect()
   const percent = (e.clientX - rect.left) / rect.width
   const newTime = percent * duration.value
-  audioRef.value.currentTime = newTime
-  musicStore.setCurrentTime(newTime)
+  debouncedSetCurrentTime(newTime)
 }
 
 // 音量条点击
 const handleVolumeClick = (e: MouseEvent) => {
   const volumeBar = e.currentTarget as HTMLElement
   const rect = volumeBar.getBoundingClientRect()
-  const percent = (e.clientX - rect.left) / rect.width
-  musicStore.setVolume(percent)
+  const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  debouncedSetVolume(percent)
 }
 
 // 播放列表项点击处理

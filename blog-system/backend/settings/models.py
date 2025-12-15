@@ -14,6 +14,17 @@ class SiteSettings(models.Model):
         help_text='支持 PNG、JPG、SVG 等格式，建议尺寸 24x24 像素'
     )
     about_content = models.TextField(blank=True, verbose_name='关于页面内容', help_text='支持 Markdown 格式')
+    
+    # 邮件通知配置
+    enable_email_notification = models.BooleanField(default=False, verbose_name='启用邮件通知', help_text='是否启用邮件通知功能')
+    email_host = models.CharField(max_length=200, blank=True, verbose_name='SMTP 服务器', help_text='例如：smtp.gmail.com')
+    email_port = models.IntegerField(default=587, verbose_name='SMTP 端口', help_text='常用端口：587 (TLS) 或 465 (SSL)')
+    email_use_tls = models.BooleanField(default=True, verbose_name='使用 TLS', help_text='是否使用 TLS 加密')
+    email_use_ssl = models.BooleanField(default=False, verbose_name='使用 SSL', help_text='是否使用 SSL 加密')
+    email_host_user = models.CharField(max_length=200, blank=True, verbose_name='SMTP 用户名', help_text='发送邮件的邮箱地址')
+    email_host_password = models.CharField(max_length=200, blank=True, verbose_name='SMTP 密码', help_text='邮箱密码或应用专用密码')
+    email_from = models.CharField(max_length=200, blank=True, verbose_name='发件人邮箱', help_text='显示的发件人邮箱地址')
+    
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
 

@@ -19,6 +19,19 @@
       </div>
     </section>
 
+    <!-- 热门文章 -->
+    <section v-if="hotPosts.length > 0" class="hot-posts-section">
+      <div class="container">
+        <h2 class="section-title">
+          <Icon icon="mdi:fire" />
+          <span>热门文章</span>
+        </h2>
+        <div class="hot-posts-grid">
+          <PostCard v-for="post in hotPosts" :key="post.id" :post="post" />
+        </div>
+      </div>
+    </section>
+
     <!-- 文章列表 -->
     <section class="posts-section">
       <div class="container">
@@ -68,7 +81,9 @@ const heroSubtitle = ref(getTranslation('home.hero.subtitle', '欢迎来到我�
 const socialLinks = ref<Array<{ name: string; url: string; icon: string }>>([])
 
 const posts = ref<Post[]>([])
+const hotPosts = ref<Post[]>([])
 const loading = ref(false)
+const hotLoading = ref(false)
 const currentPage = ref(1)
 const totalPages = ref(1)
 
@@ -94,8 +109,23 @@ const handlePageChange = (page: number) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+const fetchHotPosts = async () => {
+  hotLoading.value = true
+  try {
+    hotPosts.value = await postsApi.getHotPosts()
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('Failed to fetch hot posts:', error)
+    }
+    hotPosts.value = []
+  } finally {
+    hotLoading.value = false
+  }
+}
+
 onMounted(() => {
   fetchPosts()
+  fetchHotPosts()
 })
 </script>
 
@@ -145,6 +175,17 @@ onMounted(() => {
 
 .social-link:hover {
   transform: scale(1.2);
+}
+
+.hot-posts-section {
+  padding: 60px 0;
+  background: var(--bg-secondary, #f5f5f5);
+}
+
+.hot-posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
 }
 
 .posts-section {
