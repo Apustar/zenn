@@ -8,6 +8,28 @@
       </button>
     </div>
 
+    <!-- 搜索 -->
+    <div class="filters">
+      <div class="search-wrapper">
+        <Icon icon="mdi:magnify" class="search-icon" />
+        <input
+          v-model="searchKeyword"
+          @input="handleSearch"
+          type="text"
+          placeholder="搜索相册名称或描述..."
+          class="search-input"
+        />
+        <button
+          v-if="searchKeyword"
+          @click="clearSearch"
+          class="search-clear"
+          type="button"
+        >
+          <Icon icon="mdi:close-circle" />
+        </button>
+      </div>
+    </div>
+
     <div v-if="loading" class="loading">加载中...</div>
     <div v-else-if="albums.length" class="albums-grid">
       <div
@@ -50,6 +72,27 @@
       </div>
     </div>
     <div v-else class="empty">暂无相册</div>
+
+    <!-- 分页 -->
+    <div v-if="totalPages > 1" class="pagination">
+      <button
+        @click="changePage(currentPage - 1)"
+        :disabled="currentPage === 1"
+        class="page-btn"
+      >
+        上一页
+      </button>
+      <span class="page-info">
+        第 {{ currentPage }} / {{ totalPages }} 页
+      </span>
+      <button
+        @click="changePage(currentPage + 1)"
+        :disabled="currentPage === totalPages"
+        class="page-btn"
+      >
+        下一页
+      </button>
+    </div>
 
     <!-- 相册详情/编辑模态框 -->
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
@@ -97,8 +140,14 @@
                 :src="form.coverPreview || editingAlbum?.cover"
                 alt="封面预览"
                 class="image-preview"
+                @click="() => coverInput?.click()"
+                title="点击更换封面"
               />
-              <div v-else class="image-placeholder">
+              <div
+                v-else
+                class="image-placeholder"
+                @click="() => coverInput?.click()"
+              >
                 <Icon icon="mdi:image" />
                 <span>点击上传封面</span>
               </div>
@@ -111,7 +160,7 @@
               />
               <button
                 type="button"
-                @click="() => (coverInput as any)?.click()"
+                @click="() => coverInput?.click()"
                 class="btn btn-secondary"
               >
                 选择封面
@@ -150,27 +199,57 @@
           <div v-if="editingAlbum" class="photos-section">
             <div class="section-header">
               <h3>照片管理</h3>
-              <button
-                type="button"
-                @click="openPhotoModal"
-                class="btn btn-secondary btn-sm"
-              >
-                <Icon icon="mdi:plus" />
-                添加照片
-              </button>
+              <div class="section-actions">
+                <button
+                  type="button"
+                  @click="openBulkUploadModal"
+                  class="btn btn-secondary btn-sm"
+                >
+                  <Icon icon="mdi:upload-multiple" />
+                  批量上传
+                </button>
+                <button
+                  type="button"
+                  @click="openPhotoModal"
+                  class="btn btn-secondary btn-sm"
+                >
+                  <Icon icon="mdi:plus" />
+                  添加照片
+                </button>
+                <button
+                  v-if="selectedPhotos.length > 0"
+                  type="button"
+                  @click="handleBulkDelete"
+                  class="btn btn-danger btn-sm"
+                >
+                  <Icon icon="mdi:delete" />
+                  删除选中 ({{ selectedPhotos.length }})
+                </button>
+              </div>
             </div>
             <div v-if="editingAlbum.photos && editingAlbum.photos.length" class="photos-grid">
               <div
-                v-for="photo in editingAlbum.photos"
+                v-for="(photo, index) in editingAlbum.photos"
                 :key="photo.id"
                 class="photo-item"
+                :class="{ 'selected': selectedPhotos.includes(photo.id) }"
+                @click="togglePhotoSelection(photo.id)"
               >
+                <div class="photo-checkbox">
+                  <input
+                    type="checkbox"
+                    :checked="selectedPhotos.includes(photo.id)"
+                    @click.stop="togglePhotoSelection(photo.id)"
+                  />
+                </div>
                 <img :src="photo.image" :alt="photo.title" class="photo-thumb" />
-                <div class="photo-actions">
+                <div class="photo-order">{{ index + 1 }}</div>
+                <div class="photo-actions" @click.stop>
                   <button
                     type="button"
                     @click="openPhotoEditModal(photo)"
                     class="btn-icon btn-sm"
+                    title="编辑"
                   >
                     <Icon icon="mdi:pencil" />
                   </button>
@@ -178,6 +257,7 @@
                     type="button"
                     @click="handleDeletePhoto(photo)"
                     class="btn-icon btn-sm btn-danger"
+                    title="删除"
                   >
                     <Icon icon="mdi:delete" />
                   </button>
@@ -199,6 +279,62 @@
       </div>
     </div>
 
+    <!-- 批量上传模态框 -->
+    <div v-if="showBulkUploadModal" class="modal-overlay" @click="closeBulkUploadModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2>批量上传照片</h2>
+          <button @click="closeBulkUploadModal" class="btn-close">
+            <Icon icon="mdi:close" />
+          </button>
+        </div>
+        <div class="modal-form">
+          <div class="form-group">
+            <label class="form-label">选择照片 *</label>
+            <input
+              ref="bulkPhotoInput"
+              type="file"
+              accept="image/*"
+              multiple
+              @change="handleBulkPhotoChange"
+              class="file-input"
+            />
+            <button
+              type="button"
+              @click="() => bulkPhotoInput?.click()"
+              class="btn btn-secondary"
+            >
+              选择多张照片
+            </button>
+            <div v-if="bulkPhotos.length" class="bulk-photos-preview">
+              <div
+                v-for="(photo, index) in bulkPhotos"
+                :key="index"
+                class="bulk-photo-item"
+              >
+                <img :src="photo.preview" :alt="`Photo ${index + 1}`" class="bulk-photo-preview" />
+                <button
+                  type="button"
+                  @click="removeBulkPhoto(index)"
+                  class="btn-icon btn-sm btn-danger"
+                >
+                  <Icon icon="mdi:close" />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="closeBulkUploadModal" class="btn btn-secondary">
+              取消
+            </button>
+            <button type="button" @click="handleBulkUpload" class="btn btn-primary" :disabled="bulkUploading || bulkPhotos.length === 0">
+              {{ bulkUploading ? '上传中...' : `上传 ${bulkPhotos.length} 张照片` }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 照片编辑模态框 -->
     <div v-if="showPhotoModal" class="modal-overlay" @click="closePhotoModal">
       <div class="modal-content" @click.stop>
@@ -217,8 +353,14 @@
                 :src="photoForm.imagePreview || editingPhoto?.image"
                 alt="照片预览"
                 class="image-preview"
+                @click="() => photoInput?.click()"
+                title="点击更换照片"
               />
-              <div v-else class="image-placeholder">
+              <div
+                v-else
+                class="image-placeholder"
+                @click="() => photoInput?.click()"
+              >
                 <Icon icon="mdi:image" />
                 <span>点击上传照片</span>
               </div>
@@ -232,7 +374,7 @@
               />
               <button
                 type="button"
-                @click="() => (photoInput as any)?.click()"
+                @click="() => photoInput?.click()"
                 class="btn btn-secondary"
               >
                 选择照片
@@ -288,13 +430,21 @@ import { photosApi, type Album, type Photo } from '@/api/photos'
 const loading = ref(false)
 const saving = ref(false)
 const savingPhoto = ref(false)
+const bulkUploading = ref(false)
 const albums = ref<Album[]>([])
 const showModal = ref(false)
 const showPhotoModal = ref(false)
+const showBulkUploadModal = ref(false)
 const editingAlbum = ref<Album | null>(null)
 const editingPhoto = ref<Photo | null>(null)
+const selectedPhotos = ref<number[]>([])
 const coverInput = ref<HTMLInputElement | null>(null)
 const photoInput = ref<HTMLInputElement | null>(null)
+const bulkPhotoInput = ref<HTMLInputElement | null>(null)
+const currentPage = ref(1)
+const totalPages = ref(1)
+const searchKeyword = ref('')
+const bulkPhotos = ref<Array<{ file: File; preview: string }>>([])
 
 const form = reactive({
   name: '',
@@ -315,11 +465,17 @@ const photoForm = reactive({
   order: 0,
 })
 
-const fetchAlbums = async () => {
+const fetchAlbums = async (page = 1) => {
   loading.value = true
   try {
-    const response = await photosApi.getAlbums({ page: 1 })
+    const params: any = { page }
+    if (searchKeyword.value) {
+      params.search = searchKeyword.value
+    }
+    const response = await photosApi.getAlbums(params)
     albums.value = response.results || []
+    totalPages.value = response.count ? Math.ceil(response.count / 10) : 1
+    currentPage.value = page
   } catch (error) {
     if (import.meta.env.DEV) {
       console.error('Failed to fetch albums:', error)
@@ -328,6 +484,24 @@ const fetchAlbums = async () => {
     albums.value = []
   } finally {
     loading.value = false
+  }
+}
+
+const handleSearch = () => {
+  clearTimeout((window as any).albumSearchTimer)
+  ;(window as any).albumSearchTimer = setTimeout(() => {
+    fetchAlbums(1)
+  }, 300)
+}
+
+const clearSearch = () => {
+  searchKeyword.value = ''
+  fetchAlbums(1)
+}
+
+const changePage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    fetchAlbums(page)
   }
 }
 
@@ -354,6 +528,7 @@ const openAlbumDetail = async (album: Album) => {
     form.order = fullAlbum.order
     form.is_encrypted = fullAlbum.is_encrypted || false
     form.password = ''
+    selectedPhotos.value = []
     showModal.value = true
   } catch (error) {
     if (import.meta.env.DEV) {
@@ -408,7 +583,7 @@ const handleSubmit = async () => {
       alert('相册创建成功')
     }
     closeModal()
-    await fetchAlbums()
+    await fetchAlbums(currentPage.value)
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || '操作失败'
     alert(`操作失败: ${message}`)
@@ -425,7 +600,7 @@ const handleDelete = async (album: Album) => {
   try {
     await photosApi.deleteAlbum(album.slug)
     alert('删除成功')
-    await fetchAlbums()
+    await fetchAlbums(currentPage.value)
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || '删除失败'
     alert(`删除失败: ${message}`)
@@ -501,12 +676,21 @@ const handlePhotoSubmit = async () => {
       const fullAlbum = await photosApi.getAlbum(editingAlbum.value.slug)
       editingAlbum.value = fullAlbum
     }
-    await fetchAlbums()
+    await fetchAlbums(currentPage.value)
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || '操作失败'
     alert(`操作失败: ${message}`)
   } finally {
     savingPhoto.value = false
+  }
+}
+
+const togglePhotoSelection = (photoId: number) => {
+  const index = selectedPhotos.value.indexOf(photoId)
+  if (index > -1) {
+    selectedPhotos.value.splice(index, 1)
+  } else {
+    selectedPhotos.value.push(photoId)
   }
 }
 
@@ -523,10 +707,99 @@ const handleDeletePhoto = async (photo: Photo) => {
       const fullAlbum = await photosApi.getAlbum(editingAlbum.value.slug)
       editingAlbum.value = fullAlbum
     }
-    await fetchAlbums()
+    await fetchAlbums(currentPage.value)
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || '删除失败'
     alert(`删除失败: ${message}`)
+  }
+}
+
+const handleBulkDelete = async () => {
+  if (selectedPhotos.value.length === 0) {
+    return
+  }
+  
+  if (!confirm(`确定要删除选中的 ${selectedPhotos.value.length} 张照片吗？`)) {
+    return
+  }
+  
+  try {
+    await photosApi.bulkDeletePhotos(selectedPhotos.value)
+    alert('批量删除成功')
+    selectedPhotos.value = []
+    // 重新加载相册详情
+    if (editingAlbum.value) {
+      const fullAlbum = await photosApi.getAlbum(editingAlbum.value.slug)
+      editingAlbum.value = fullAlbum
+    }
+    await fetchAlbums(currentPage.value)
+  } catch (error: any) {
+    const message = error?.response?.data?.detail || error?.message || '删除失败'
+    alert(`删除失败: ${message}`)
+  }
+}
+
+const openBulkUploadModal = () => {
+  bulkPhotos.value = []
+  showBulkUploadModal.value = true
+}
+
+const closeBulkUploadModal = () => {
+  showBulkUploadModal.value = false
+  bulkPhotos.value = []
+}
+
+const handleBulkPhotoChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  if (files) {
+    Array.from(files).forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          bulkPhotos.value.push({
+            file,
+            preview: e.target?.result as string
+          })
+        }
+        reader.readAsDataURL(file)
+      }
+    })
+  }
+}
+
+const removeBulkPhoto = (index: number) => {
+  bulkPhotos.value.splice(index, 1)
+}
+
+const handleBulkUpload = async () => {
+  if (!editingAlbum.value || bulkPhotos.value.length === 0) {
+    return
+  }
+  
+  bulkUploading.value = true
+  try {
+    let order = editingAlbum.value.photos?.length || 0
+    for (const photo of bulkPhotos.value) {
+      await photosApi.createPhoto({
+        album: editingAlbum.value.id,
+        image: photo.file,
+        order: order++
+      })
+    }
+    alert(`成功上传 ${bulkPhotos.value.length} 张照片`)
+    closeBulkUploadModal()
+    // 重新加载相册详情
+    if (editingAlbum.value) {
+      const fullAlbum = await photosApi.getAlbum(editingAlbum.value.slug)
+      editingAlbum.value = fullAlbum
+    }
+    await fetchAlbums(currentPage.value)
+  } catch (error: any) {
+    const message = error?.response?.data?.detail || error?.message || '上传失败'
+    alert(`上传失败: ${message}`)
+  } finally {
+    bulkUploading.value = false
   }
 }
 
@@ -536,7 +809,7 @@ const formatDate = (dateString: string) => {
 }
 
 onMounted(() => {
-  fetchAlbums()
+  fetchAlbums(1)
 })
 </script>
 
@@ -843,11 +1116,45 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   color: var(--text-secondary, #666);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.image-placeholder:hover {
+  border-color: var(--primary-color, #FE9600);
+  background: var(--bg-secondary, #f5f5f5);
+  color: var(--primary-color, #FE9600);
 }
 
 .image-preview {
-  border: none;
+  border: 2px solid var(--border-color, #e5e5e5);
   object-fit: cover;
+  position: relative;
+}
+
+.image-preview:hover {
+  border-color: var(--primary-color, #FE9600);
+  opacity: 0.9;
+}
+
+.image-preview::after {
+  content: '点击更换';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.image-preview:hover::after {
+  opacity: 1;
 }
 
 .file-input {
@@ -910,5 +1217,77 @@ onMounted(() => {
   gap: 12px;
   justify-content: flex-end;
   margin-top: 24px;
+}
+
+/* 搜索和筛选 */
+.filters {
+  margin-bottom: 32px;
+  margin-top: 8px;
+}
+
+.search-wrapper {
+  position: relative;
+  max-width: 500px;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  color: var(--text-secondary, #999);
+  font-size: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px 12px 48px;
+  border: 2px solid var(--border-color, #e5e5e5);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--card-bg, white);
+  color: var(--text-color, #333);
+  transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary, #999);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #FE9600);
+  box-shadow: 0 0 0 3px rgba(254, 150, 0, 0.1);
+}
+
+.search-input:hover:not(:focus) {
+  border-color: var(--primary-color, #FE9600);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.search-clear {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-secondary, #999);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s;
+  z-index: 1;
+}
+
+.search-clear:hover {
+  color: var(--text-color, #333);
+}
+
+.search-clear :deep(svg) {
+  font-size: 20px;
 }
 </style>

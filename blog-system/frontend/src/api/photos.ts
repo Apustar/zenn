@@ -183,5 +183,15 @@ export const photosApi = {
   verifyPassword: async (slug: string, password: string): Promise<{ success: boolean; message: string }> => {
     return api.post(`/albums/${slug}/verify_password/`, { password })
   },
+
+  // 批量更新照片排序
+  bulkUpdatePhotoOrder: async (orders: { id: number; order: number }[]): Promise<{ success: boolean; message: string }> => {
+    return api.post('/photos/bulk_update_order/', { orders })
+  },
+
+  // 批量删除照片
+  bulkDeletePhotos: async (ids: number[]): Promise<{ success: boolean; message: string }> => {
+    return api.post('/photos/bulk_delete/', { ids })
+  },
 }
 

@@ -6,9 +6,11 @@ from users.serializers import UserPublicSerializer
 
 class PhotoSerializer(serializers.ModelSerializer):
     """照片序列化器"""
+    album = serializers.PrimaryKeyRelatedField(queryset=Album.objects.all())
+    
     class Meta:
         model = Photo
-        fields = ['id', 'title', 'image', 'description', 'order', 'created_at']
+        fields = ['id', 'title', 'image', 'description', 'album', 'order', 'created_at']
         read_only_fields = ['id', 'created_at']
 
 
